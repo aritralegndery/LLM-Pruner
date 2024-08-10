@@ -36,12 +36,14 @@ def main(args):
         setup_sublogger=True
     )
 
-    tokenizer = LlamaTokenizer.from_pretrained(args.base_model,device_map='auto')
+    tokenizer = LlamaTokenizer.from_pretrained(args.base_model)
     model = LlamaForCausalLM.from_pretrained(
         args.base_model,
-        low_cpu_mem_usage=True if args.torch_version >=1.9 else False,device_map="auto"
+        low_cpu_mem_usage=True if args.torch_version >=1.9 else False
     )
-    model.half()
+    if args.device != "cpu":
+        model.half()
+    model.to(args.device)
 
     if args.test_before_train:
         logger.log("\n==================Generation Results before Pruning================\n")
@@ -298,9 +300,9 @@ if __name__ == "__main__":
     parser.add_argument('--num_examples', type=int, default=10)
 
     # general argument
-    parser.add_argument('--device', type=str, help='device')
+    parser.add_argument('--device', type=str, default="cuda", help='device')
     parser.add_argument('--test_before_train', action='store_true', help='whether test before train')
-    parser.add_argument('--eval_device', type=str,help='eval device')
+    parser.add_argument('--eval_device', type=str, default="cuda", help='eval device')
     parser.add_argument('--test_after_train', action='store_true', help='whether test after train')
 
     parser.add_argument('--seed', type=int, default=42, help='seed')
